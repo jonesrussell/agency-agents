@@ -1,0 +1,10 @@
+port: 3100
+log_level: info
+prompts_dir: ..
+
+execution:
+  default_model: claude-sonnet-4-6
+  max_tokens: 4096
+  temperature: 0.7
+  timeout_ms: 60000
+  agent_overrides: {}
