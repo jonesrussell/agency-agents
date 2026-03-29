@@ -80,4 +80,37 @@ describe('Catalog', () => {
   it('reports count', () => {
     expect(catalog.count).toBe(3);
   });
+
+  it('deduplicates slugs, keeping the first entry', () => {
+    const duplicateEntries: AgentEntry[] = [
+      {
+        slug: 'deal-strategist',
+        name: 'Deal Strategist (sales)',
+        division: 'sales',
+        specialty: 'MEDDPICC qualification',
+        whenToUse: 'Scoring deals',
+        emoji: '♟️',
+        promptPath: 'sales/deal-strategist.md',
+        promptContent: '# Deal Strategist from sales',
+      },
+      {
+        slug: 'deal-strategist',
+        name: 'Deal Strategist (biz-dev)',
+        division: 'biz-dev',
+        specialty: 'Partnership deals',
+        whenToUse: 'Partnership scoring',
+        emoji: '🤝',
+        promptPath: 'biz-dev/deal-strategist.md',
+        promptContent: '# Deal Strategist from biz-dev',
+      },
+    ];
+
+    const dupCatalog = new Catalog(duplicateEntries);
+    expect(dupCatalog.count).toBe(1);
+
+    const agent = dupCatalog.get('deal-strategist');
+    expect(agent).toBeDefined();
+    expect(agent!.division).toBe('sales');
+    expect(agent!.promptPath).toBe('sales/deal-strategist.md');
+  });
 });

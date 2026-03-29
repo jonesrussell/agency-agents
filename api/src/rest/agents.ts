@@ -42,8 +42,22 @@ export function agentRoutes(catalog: Catalog) {
         specialty: agent.specialty,
         whenToUse: agent.whenToUse,
         emoji: agent.emoji,
-        prompt: agent.promptContent,
       },
+    });
+  });
+
+  router.get('/v1/agents/:slug/prompt', (c) => {
+    const slug = c.req.param('slug');
+    const agent = catalog.get(slug);
+
+    if (!agent) {
+      throw new AgentApiError('AGENT_NOT_FOUND', 404, `Agent '${slug}' not found`);
+    }
+
+    return c.json({
+      version: 'v1',
+      agent: slug,
+      prompt: agent.promptContent,
     });
   });
 

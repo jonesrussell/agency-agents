@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   } else {
     // REST mode imports dynamically to avoid loading MCP deps
     const { createApp } = await import('./rest/app.js');
-    const app = createApp(catalog, engine);
+    const app = createApp(catalog, engine, config);
     log('info', 'starting_rest_server', { port: config.port });
     serve({ fetch: app.fetch, port: config.port });
     log('info', 'server_ready', { port: config.port, agents: catalog.count });

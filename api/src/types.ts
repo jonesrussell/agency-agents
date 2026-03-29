@@ -67,6 +67,7 @@ export interface ExecutionConfig {
   max_tokens: number;
   temperature: number;
   timeout_ms: number;
+  allowed_models?: string[];
   agent_overrides: Record<
     string,
     Partial<Omit<ExecutionConfig, 'agent_overrides'>>
@@ -77,5 +78,6 @@ export interface AppConfig {
   port: number;
   log_level: 'debug' | 'info' | 'warn' | 'error';
   prompts_dir: string;
+  allowed_origins?: string[];
   execution: ExecutionConfig;
 }

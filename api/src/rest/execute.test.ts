@@ -130,4 +130,33 @@ describe('POST /v1/agents/:slug/execute', () => {
     expect(text).toContain('event: error');
     expect(text).toContain('MODEL_ERROR');
   });
+
+  it('returns 422 when context exceeds max size', async () => {
+    const app = makeApp();
+
+    const largeContext = { data: 'x'.repeat(50001) };
+
+    const res = await app.request('/v1/agents/test-agent/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'do something', context: largeContext }),
+    });
+
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.error.message).toContain('Context exceeds maximum size');
+  });
+
+  it('rejects unknown fields in request body', async () => {
+    const app = makeApp();
+
+    const res = await app.request('/v1/agents/test-agent/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'hello', evil_field: 'injected' }),
+    });
+
+    expect(res.status).toBe(422);
+  });
 });

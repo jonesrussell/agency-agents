@@ -84,6 +84,9 @@ export class ExecutionEngine {
     let tokensIn = 0;
     let tokensOut = 0;
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.config.timeout_ms);
+
     try {
       const userMessage =
         context && Object.keys(context).length > 0
@@ -96,7 +99,7 @@ export class ExecutionEngine {
         temperature: this.config.temperature,
         system: this.buildSystemPrompt(agent),
         messages: [{ role: 'user', content: userMessage }],
-      });
+      }, { signal: controller.signal });
 
       for await (const event of stream) {
         if (
@@ -144,9 +147,13 @@ export class ExecutionEngine {
       };
     } catch (err) {
       const durationMs = Date.now() - startTime;
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      const code =
-        err instanceof Anthropic.RateLimitError
+      const isTimeout = err instanceof Error && err.name === 'AbortError';
+      const message = isTimeout
+        ? `Execution timed out after ${this.config.timeout_ms}ms`
+        : err instanceof Error ? err.message : 'Unknown error';
+      const code = isTimeout
+        ? 'TIMEOUT'
+        : err instanceof Anthropic.RateLimitError
           ? 'RATE_LIMITED'
           : err instanceof Anthropic.APIError
             ? 'MODEL_ERROR'
@@ -172,6 +179,8 @@ export class ExecutionEngine {
         type: 'error',
         data: { code, message, details: { execution_id: executionId } },
       };
+    } finally {
+      clearTimeout(timer);
     }
   }
 

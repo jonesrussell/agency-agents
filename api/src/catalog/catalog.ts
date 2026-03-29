@@ -1,3 +1,4 @@
+import { log } from '../observability/logger.js';
 import type { AgentEntry, AgentSummary } from '../types.js';
 
 interface ListOptions {
@@ -19,8 +20,20 @@ export class Catalog {
   private readonly sorted: AgentEntry[];
 
   constructor(entries: AgentEntry[]) {
-    this.agents = new Map(entries.map((e) => [e.slug, e]));
-    this.sorted = [...entries].sort((a, b) => a.slug.localeCompare(b.slug));
+    this.agents = new Map();
+    for (const entry of entries) {
+      const existing = this.agents.get(entry.slug);
+      if (existing) {
+        log('warn', 'duplicate_slug', {
+          slug: entry.slug,
+          kept: existing.promptPath,
+          discarded: entry.promptPath,
+        });
+        continue;
+      }
+      this.agents.set(entry.slug, entry);
+    }
+    this.sorted = [...this.agents.values()].sort((a, b) => a.slug.localeCompare(b.slug));
   }
 
   get count(): number {

@@ -98,7 +98,7 @@ describe('GET /v1/agents', () => {
 });
 
 describe('GET /v1/agents/:slug', () => {
-  it('returns agent detail with prompt', async () => {
+  it('returns agent detail without prompt', async () => {
     const app = makeApp();
     const res = await app.request('/v1/agents/code-reviewer');
     const body = await res.json();
@@ -106,13 +106,36 @@ describe('GET /v1/agents/:slug', () => {
     expect(res.status).toBe(200);
     expect(body.version).toBe('v1');
     expect(body.agent.slug).toBe('code-reviewer');
-    expect(body.agent.prompt).toBe('You are a code reviewer.');
     expect(body.agent.name).toBe('Code Reviewer');
+    expect(body.agent).not.toHaveProperty('prompt');
+    expect(body.agent).not.toHaveProperty('promptContent');
   });
 
   it('returns 404 for unknown agent', async () => {
     const app = makeApp();
     const res = await app.request('/v1/agents/nonexistent');
+    const body = await res.json();
+
+    expect(res.status).toBe(404);
+    expect(body.error.code).toBe('AGENT_NOT_FOUND');
+  });
+});
+
+describe('GET /v1/agents/:slug/prompt', () => {
+  it('returns the prompt content for an agent', async () => {
+    const app = makeApp();
+    const res = await app.request('/v1/agents/code-reviewer/prompt');
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.version).toBe('v1');
+    expect(body.agent).toBe('code-reviewer');
+    expect(body.prompt).toBe('You are a code reviewer.');
+  });
+
+  it('returns 404 for unknown agent', async () => {
+    const app = makeApp();
+    const res = await app.request('/v1/agents/nonexistent/prompt');
     const body = await res.json();
 
     expect(res.status).toBe(404);
